@@ -8,9 +8,12 @@
 #include "chip.h"
 #include "swm.h"
 
-void SWM_init(LPC_SYSCTL_T* pLPC_SYSCON,
+int SWM_init(LPC_SYSCTL_T* pLPC_SYSCON,
 		LPC_SWM_T* pLPC_SWM)
 {
+	if ( !pLPC_SYSCON || !pLPC_SWM ){
+		return SWM_RC_PARAM_ERROR;
+	}
 	// Enable SWM clock
 	pLPC_SYSCON->SYSAHBCLKCTRL |= (1<<7);
 
@@ -26,4 +29,5 @@ void SWM_init(LPC_SYSCTL_T* pLPC_SYSCON,
 
 	// Disable SWM clock - power saving
 	pLPC_SYSCON->SYSAHBCLKCTRL &= (~(1<<7));
+	return SWM_RC_OK;
 }

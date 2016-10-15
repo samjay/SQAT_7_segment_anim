@@ -43,6 +43,7 @@ int main(void)
 			0x00000080
     };
 
+    // TODO: check return value
     SWM_init(LPC_SYSCON,LPC_SWM);
     I2C_init();
     DISP_on();

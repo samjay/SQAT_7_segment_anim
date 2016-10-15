@@ -112,9 +112,22 @@ TEST_F( ut_SWM, correct_initialization_of_switch_matrix )
 {
 	reset_to_all_zeroes();
 
-	SWM_ut::SWM_init( pLPC_SYSCTL, pLPC_SWM );
+	mRc = SWM_ut::SWM_init( pLPC_SYSCTL, pLPC_SWM );
+	EXPECT_EQ( SWM_RC_OK, mRc );
 
 	EXPECT_EQ( 0x0affffffUL, pLPC_SWM->PINASSIGN[7]);
 	EXPECT_EQ( 0xffffff0bUL, pLPC_SWM->PINASSIGN[8]);
 	EXPECT_EQ( 0xffffffb3UL, pLPC_SWM->PINENABLE0);
+}
+
+TEST_F( ut_SWM, pointer_parameter_SYSCON_is_checked )
+{
+	mRc = SWM_ut::SWM_init(0,pLPC_SWM);
+	EXPECT_EQ( SWM_RC_PARAM_ERROR, mRc );
+}
+
+TEST_F( ut_SWM, pointer_parameter_SWM_is_checked )
+{
+	mRc = SWM_ut::SWM_init(pLPC_SYSCTL,0);
+	EXPECT_EQ( SWM_RC_PARAM_ERROR, mRc );
 }

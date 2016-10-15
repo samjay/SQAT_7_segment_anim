@@ -8,11 +8,14 @@
 #ifndef SWM_H_
 #define SWM_H_
 
+#include "chip.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void SWM_init();
+void SWM_init(LPC_SYSCTL_T* pLPC_SYSCON,
+		LPC_SWM_T* pLPC_SWM);
 
 #ifdef __cplusplus
 }

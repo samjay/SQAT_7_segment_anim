@@ -43,7 +43,7 @@ int main(void)
 			0x00000080
     };
 
-    SWM_init();
+    SWM_init(LPC_SYSCON,LPC_SWM);
     I2C_init();
     DISP_on();
 

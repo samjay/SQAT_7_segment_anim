@@ -22,8 +22,8 @@
 #include "delay.h"
 #include "display.h"
 
-int main(void) {
-
+int main(void)
+{
 #if defined (__USE_LPCOPEN)
     // Read clock settings and update SystemCoreClock variable
     SystemCoreClockUpdate();

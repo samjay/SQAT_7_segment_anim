@@ -10,24 +10,11 @@
 
 const int addr = ADDR_HT16K33;
 
-// Data frame to be sent to the display
-char frame [] = {0, 0, 1, 0, 2, 0, 3, 0, 4, 0};
-
-// Logical index to HW mapping
-int mapping[] = {9, 7, 3, 1};
-
-// Format the data frame and write to the display
-int show_dot(uint32_t value) {
-	int rc;
-
-	for(int i = 0; i <= 3; i++) {
-		frame[mapping[i]] = value & 0x000000FF;
-		value = value >> 8;
-	}
-	rc = I2C_write(addr, frame, 10);
-	return rc;
-}
-
+/**********************************************************************
+ *
+ * display setup
+ *
+ **********************************************************************/
 
 /*
  * Disable the display
@@ -72,6 +59,29 @@ int DISP_on()
 	} else {
 		return rc;
 	}
+	return rc;
+}
 
+/**********************************************************************
+ *
+ * display animation
+ *
+ **********************************************************************/
+
+// Data frame to be sent to the display
+char frame [] = {0, 0, 1, 0, 2, 0, 3, 0, 4, 0};
+
+// Logical index to HW mapping
+int mapping[] = {9, 7, 3, 1};
+
+// Format the data frame and write to the display
+int show_dot(uint32_t value) {
+	int rc;
+
+	for(int i = 0; i <= 3; i++) {
+		frame[mapping[i]] = value & 0x000000FF;
+		value = value >> 8;
+	}
+	rc = I2C_write(addr, frame, 10);
 	return rc;
 }

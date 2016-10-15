@@ -32,7 +32,7 @@ extern "C" {
 
 int DISP_off();
 int DISP_on();
-int show_dot(uint32_t position);
+int DISP_show_frame(uint32_t position);
 
 #ifdef __cplusplus
 }

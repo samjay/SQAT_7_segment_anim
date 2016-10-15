@@ -51,7 +51,7 @@ int main(void)
 
     // Enter an infinite loop
     while(true) {
-    	show_dot(frame[i]);
+    	DISP_show_frame(frame[i]);
     	delay();
     	i++;
     	if (i > 3) i = 0;

@@ -75,7 +75,7 @@ char frame [] = {0, 0, 1, 0, 2, 0, 3, 0, 4, 0};
 int mapping[] = {9, 7, 3, 1};
 
 // Format the data frame and write to the display
-int show_dot(uint32_t value) {
+int DISP_show_frame(uint32_t value) {
 	int rc;
 
 	for(int i = 0; i <= 3; i++) {

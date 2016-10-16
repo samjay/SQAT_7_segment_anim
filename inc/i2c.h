@@ -8,6 +8,9 @@
 #ifndef I2C_H_
 #define I2C_H_
 
+#define I2C_RC_OK 0
+
+
 //#define I2C_CFG_MSTEN            (0x1)
 //#define I2C_CFG_SLVEN            (0x2)
 //#define I2C_STAT_MSTPENDING      (0x1)

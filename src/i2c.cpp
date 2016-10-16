@@ -8,14 +8,18 @@
 #include "chip.h"
 #include "i2c.h"
 
-void I2C_init(LPC_SYSCTL_T *pLPC_SYSCON,
+int I2C_init(LPC_SYSCTL_T *pLPC_SYSCON,
 		LPC_I2C_T* pLPC_I2C)
 {
+	if ( 0==pLPC_SYSCON || 0==pLPC_I2C ){
+		return I2C_RC_PARAM_ERROR;
+	}
 	pLPC_SYSCON -> SYSAHBCLKCTRL |=  (1 << 5);   // Enable clock for I2C (p. 36)
 	pLPC_SYSCON -> PRESETCTRL &= ~(1 << 6);		// Assert I2C reset (p. 30)
 	pLPC_SYSCON -> PRESETCTRL |= (1 << 6);		// Clear I2C reset (p. 30)
 	pLPC_I2C -> CLKDIV = 15;						// I2C clock divider (p. 222)
 	pLPC_I2C->CFG = I2C_CFG_MSTEN;				// Enable master (p. 213)
+	return I2C_RC_OK;
 }
 
 static int i2c_master_pending()

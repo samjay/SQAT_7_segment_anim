@@ -130,10 +130,12 @@ TEST_F( unittest_I2C, correct_initialization_of_I2C_master )
 //
 TEST_F( unittest_I2C, parameter_check_for_SYSCON )
 {
-	I2C_test_namespace::I2C_init( 0, pLPC_I2C );
+	mRc = I2C_test_namespace::I2C_init( 0, pLPC_I2C );
+	EXPECT_EQ( I2C_RC_PARAM_ERROR, mRc );
 }
 
 TEST_F( unittest_I2C, parameter_check_for_I2C )
 {
-	I2C_test_namespace::I2C_init( pLPC_SYSCTL,0 );
+	mRc = I2C_test_namespace::I2C_init( pLPC_SYSCTL,0 );
+	EXPECT_EQ( I2C_RC_PARAM_ERROR, mRc );
 }

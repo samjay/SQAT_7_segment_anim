@@ -8,6 +8,8 @@
 #ifndef I2C_H_
 #define I2C_H_
 
+#include "chip.h"
+
 #define I2C_RC_PARAM_ERROR -1
 #define I2C_RC_OK           0
 
@@ -56,8 +58,7 @@ typedef struct i2c_data_s {
 extern "C" {
 #endif
 
-int I2C_init(LPC_SYSCTL_T *pLPC_SYSCON,
-		LPC_I2C_T* pLPC_I2C);
+int I2C_init(LPC_SYSCTL_T *pLPC_SYSCON,LPC_I2C_T* pLPC_I2C);
 int I2C_write(int address,const char* buffer,int length);
 int I2C_read(int address, char* reg,int reglen, char* buffer, int length);
 

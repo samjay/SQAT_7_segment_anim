@@ -17,6 +17,7 @@
 #endif
 
 #include <cr_section_macros.h>
+
 #include "swm.h"
 #include "i2c.h"
 #include "delay.h"
@@ -45,7 +46,8 @@ int main(void)
 
     // TODO: check return value
     SWM_init(LPC_SYSCON,LPC_SWM);
-    I2C_init();
+    // TODO: check return value
+    I2C_init( LPC_SYSCON, LPC_I2C );
     DISP_on();
 
     int i = 0;

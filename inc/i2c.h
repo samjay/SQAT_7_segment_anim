@@ -54,16 +54,8 @@ typedef struct i2c_data_s {
 	int length;
 } i2c_data_t;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 int I2C_init(LPC_SYSCTL_T *pLPC_SYSCON,LPC_I2C_T* pLPC_I2C);
 int I2C_write(int address,const char* buffer,int length);
 int I2C_read(int address, char* reg,int reglen, char* buffer, int length);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* I2C_H_ */

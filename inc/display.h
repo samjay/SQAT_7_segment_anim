@@ -26,16 +26,11 @@
 
 #include "chip.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define FRAME_EMPTY 0x00000000
+#define FRAME_ALL   0xFFFFFFFF
 
 int DISP_off();
 int DISP_on();
 int DISP_show_frame(uint32_t position);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* DISPLAY_H_ */

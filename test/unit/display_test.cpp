@@ -52,7 +52,7 @@ protected:
 	virtual void SetUp()
 	{
 		mRc = -1;
-		memset( mI2C_write_buffer,0,sizeof(mI2C_write_buffer));
+		memset( mI2C_record_write_buffer,0,sizeof(mI2C_record_write_buffer));
 	}
 	//
 	// TearDown cleans-up test instance
@@ -60,36 +60,42 @@ protected:
 	virtual void TearDown()
 	{
 	}
-	static char get_i2c_buffer_char(int index)
+	static int get_i2c_buffer_char(int index)
 	{
-		if ( index>=0 && index<sizeof(unittest_DISP::mI2C_write_buffer) ){
-			return unittest_DISP::mI2C_write_buffer[index];
+		if ( index>=0 && index<sizeof(unittest_DISP::mI2C_record_write_buffer) ){
+			// do not sign expand the char => int conversion
+			return 0x00FF & (unittest_DISP::mI2C_record_write_buffer[index]);
 		} else {
 			return -1;
 		}
 	}
 protected:
 	int mRc;
+	//
+	// this "friend" access lets the "DISP_test_namespace::I2C_write" code below
+	//   to access the variables used to record the parameters
+	//
 	friend int DISP_test_namespace::I2C_write(int address,const char* buffer,int length);
-	static char mI2C_write_buffer[10];
-	static int mI2C_write_address;
-	static int mI2C_write_length;
+	static char mI2C_record_write_buffer[10];
+	static int mI2C_record_write_address;
+	static int mI2C_record_write_length;
 };
 
-char unittest_DISP::mI2C_write_buffer[10]={0,0,0,0,0,0,0,0,0,0};
-int unittest_DISP::mI2C_write_address;
-int unittest_DISP::mI2C_write_length;
+char unittest_DISP::mI2C_record_write_buffer[10]={0,0,0,0,0,0,0,0,0,0};
+int unittest_DISP::mI2C_record_write_address;
+int unittest_DISP::mI2C_record_write_length;
 
 int DISP_test_namespace::I2C_write(int address,const char* buffer,int length)
 {
 	if ( length>0 ){
-		if ( length>sizeof(unittest_DISP::mI2C_write_buffer) )length=sizeof(unittest_DISP::mI2C_write_buffer);
-		memcpy(unittest_DISP::mI2C_write_buffer,buffer,length);
+		if ( length>sizeof(unittest_DISP::mI2C_record_write_buffer) )
+			length=sizeof(unittest_DISP::mI2C_record_write_buffer);
+		memcpy(unittest_DISP::mI2C_record_write_buffer,buffer,length);
 	} else {
-		memset(unittest_DISP::mI2C_write_buffer,0xff,sizeof(unittest_DISP::mI2C_write_buffer));
+		memset(unittest_DISP::mI2C_record_write_buffer,0xff,sizeof(unittest_DISP::mI2C_record_write_buffer));
 	}
-	unittest_DISP::mI2C_write_address = address;
-	unittest_DISP::mI2C_write_length = length;
+	unittest_DISP::mI2C_record_write_address = address;
+	unittest_DISP::mI2C_record_write_length = length;
 	return length;
 }
 
@@ -129,11 +135,11 @@ TEST_F( unittest_DISP, display_empty_frame )
 	mRc = DISP_test_namespace::DISP_show_frame( FRAME_EMPTY );
 	EXPECT_EQ( 10, mRc );
 
-	EXPECT_EQ( 0x00, get_i2c_buffer_char(1) );
-	EXPECT_EQ( 0x00, get_i2c_buffer_char(3) );
-	EXPECT_EQ( 0x00, get_i2c_buffer_char(5) );
-	EXPECT_EQ( 0x00, get_i2c_buffer_char(7) );
-	EXPECT_EQ( 0x00, get_i2c_buffer_char(9) );
+	EXPECT_EQ( SEGMENT_NONE, get_i2c_buffer_char(1) );
+	EXPECT_EQ( SEGMENT_NONE, get_i2c_buffer_char(3) );
+	EXPECT_EQ( SEGMENT_NONE, get_i2c_buffer_char(5) );
+	EXPECT_EQ( SEGMENT_NONE, get_i2c_buffer_char(7) );
+	EXPECT_EQ( SEGMENT_NONE, get_i2c_buffer_char(9) );
 }
 
 TEST_F( unittest_DISP, display_all_frame )
@@ -141,10 +147,10 @@ TEST_F( unittest_DISP, display_all_frame )
 	mRc = DISP_test_namespace::DISP_show_frame( FRAME_ALL );
 	EXPECT_EQ( 10, mRc );
 
-	EXPECT_EQ( (char)0xFF, get_i2c_buffer_char(1) );
-	EXPECT_EQ( (char)0xFF, get_i2c_buffer_char(3) );
-	EXPECT_EQ( (char)0xFF, get_i2c_buffer_char(7) );
-	EXPECT_EQ( (char)0xFF, get_i2c_buffer_char(9) );
+	EXPECT_EQ( SEGMENT_ALL, get_i2c_buffer_char(1) );
+	EXPECT_EQ( SEGMENT_ALL, get_i2c_buffer_char(3) );
+	EXPECT_EQ( SEGMENT_ALL, get_i2c_buffer_char(7) );
+	EXPECT_EQ( SEGMENT_ALL, get_i2c_buffer_char(9) );
 }
 
 TEST_F( unittest_DISP, colon_is_not_part_of_frame_data )

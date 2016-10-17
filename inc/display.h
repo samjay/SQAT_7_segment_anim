@@ -29,6 +29,9 @@
 #define FRAME_EMPTY 0x00000000
 #define FRAME_ALL   0xFFFFFFFF
 
+#define SEGMENT_ALL  0x00FF
+#define SEGMENT_NONE 0x0000
+
 int DISP_off();
 int DISP_on();
 int DISP_show_frame(uint32_t position);

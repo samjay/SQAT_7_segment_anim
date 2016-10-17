@@ -108,8 +108,8 @@ TEST_F( unittest_I2C, correct_initialization_of_I2C_clocking )
 {
 	reset_to_all_zeroes();
 
-	I2C_test_namespace::I2C_init(pLPC_SYSCTL,pLPC_I2C);
-//	EXPECT_EQ( I2C_RC_OK, mRc );
+	mRc = I2C_test_namespace::I2C_init(pLPC_SYSCTL,pLPC_I2C);
+	EXPECT_EQ( I2C_RC_OK, mRc );
 
 	EXPECT_EQ( (1<<5), pLPC_SYSCTL->SYSAHBCLKCTRL);
 	EXPECT_EQ( 15, pLPC_I2C->CLKDIV);
@@ -120,8 +120,8 @@ TEST_F( unittest_I2C, correct_initialization_of_I2C_master )
 {
 	reset_to_all_zeroes();
 
-	I2C_test_namespace::I2C_init(pLPC_SYSCTL,pLPC_I2C);
-//	EXPECT_EQ( I2C_RC_OK, mRc );
+	mRc = I2C_test_namespace::I2C_init(pLPC_SYSCTL,pLPC_I2C);
+	EXPECT_EQ( I2C_RC_OK, mRc );
 
 	EXPECT_EQ( I2C_CFG_MSTEN, pLPC_I2C->CFG);
 }

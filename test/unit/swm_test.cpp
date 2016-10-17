@@ -68,6 +68,18 @@ protected:
 		memset( pLPC_SWM, 0x0, sizeof(*pLPC_SWM) );
 		memset( pLPC_SYSCTL, 0x0, sizeof(*pLPC_SYSCTL) );
 	}
+	int get_I2C_SDA_pin()
+	{
+		int pin = (pLPC_SWM->PINASSIGN[7] >> 24);
+
+		return 0x00FF & pin;
+	}
+	int get_I2C_SCL_pin()
+	{
+		int pin = pLPC_SWM->PINASSIGN[8];
+
+		return 0x00FF & pin;
+	}
 protected:
 	int mRc;
 	LPC_SWM_T* pLPC_SWM;
@@ -108,26 +120,41 @@ TEST_F( ut_SWM, test_constructor )
 // test that the SWM_init works
 // - obviously cannot verify everything here...
 //
-TEST_F( ut_SWM, correct_initialization_of_switch_matrix )
+TEST_F( ut_SWM, correct_SWM_initialization_for_I2C_pins )
 {
 	reset_to_all_zeroes();
 
 	mRc = SWM_ut::SWM_init( pLPC_SYSCTL, pLPC_SWM );
 	EXPECT_EQ( SWM_RC_OK, mRc );
 
-	EXPECT_EQ( 0x0affffffUL, pLPC_SWM->PINASSIGN[7]);
-	EXPECT_EQ( 0xffffff0bUL, pLPC_SWM->PINASSIGN[8]);
+	int i2c_sda_pin = get_I2C_SDA_pin();
+	int i2c_scl_pin = get_I2C_SCL_pin();
+
+	EXPECT_EQ( 10, i2c_sda_pin );
+	EXPECT_EQ( 11, i2c_scl_pin );
 	EXPECT_EQ( 0xffffffb3UL, pLPC_SWM->PINENABLE0);
 }
 
-TEST_F( ut_SWM, pointer_parameter_SYSCON_is_checked )
+TEST_F( ut_SWM, swm_is_not_initialized_if_SYSCON_param_is_null )
 {
 	mRc = SWM_ut::SWM_init(0,pLPC_SWM);
 	EXPECT_EQ( SWM_RC_PARAM_ERROR, mRc );
+
+	int i2c_sda_pin = get_I2C_SDA_pin();
+	int i2c_scl_pin = get_I2C_SCL_pin();
+
+	EXPECT_EQ( 0, i2c_sda_pin );
+	EXPECT_EQ( 0, i2c_scl_pin );
 }
 
-TEST_F( ut_SWM, pointer_parameter_SWM_is_checked )
+TEST_F( ut_SWM, swm_is_not_initialized_if_SWM_param_is_null )
 {
 	mRc = SWM_ut::SWM_init(pLPC_SYSCTL,0);
 	EXPECT_EQ( SWM_RC_PARAM_ERROR, mRc );
+
+	int i2c_sda_pin = get_I2C_SDA_pin();
+	int i2c_scl_pin = get_I2C_SCL_pin();
+
+	EXPECT_EQ( 0, i2c_sda_pin );
+	EXPECT_EQ( 0, i2c_scl_pin );
 }

@@ -53,8 +53,9 @@ int main(void)
     int i = 0;
 
     // Enter an infinite loop
+    // TODO: use the DISP_show_anim here?
     while(true) {
-    	DISP_show_frame(frame[i]);
+    	DISP_show_frame(frame[i],FRAME_DELAY_OFF);
     	delay();
     	i++;
     	if (i > 3) i = 0;

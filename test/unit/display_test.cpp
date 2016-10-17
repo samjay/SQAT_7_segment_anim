@@ -13,18 +13,20 @@
 #include "display.h"
 
 namespace DISP_test_namespace {
-
-//
-// I2C_write dependency is put into the namespace to FORCE the stub code
-//   in use (and not the real)
-//
-int I2C_write(int address,const char* buffer,int length);
-//
-// target code is included instead of (direct) compilation:
-//   This allows to cut the dependencies (such as I2C_write above)
-//
-#include "../src/display.cpp"
-
+	//
+	// I2C_write dependency is put into the namespace to FORCE the stub code
+	//   in use (and not the real)
+	//
+	int I2C_write(int address,const char* buffer,int length);
+	//
+	// delay dependency
+	//
+	void delay();
+	//
+	// target code is included instead of (direct) compilation:
+	//   This allows to cut the dependencies (such as I2C_write above)
+	//
+	#include "../src/display.cpp"
 }
 
 using ::testing::Test;
@@ -53,6 +55,7 @@ protected:
 	{
 		mRc = -1;
 		memset( mI2C_record_write_buffer,0,sizeof(mI2C_record_write_buffer));
+		mDelayCalled=0;
 	}
 	//
 	// TearDown cleans-up test instance
@@ -69,6 +72,10 @@ protected:
 			return -1;
 		}
 	}
+	static int getDelayCallCount()
+	{
+		return mDelayCalled;
+	}
 protected:
 	int mRc;
 	//
@@ -76,14 +83,17 @@ protected:
 	//   to access the variables used to record the parameters
 	//
 	friend int DISP_test_namespace::I2C_write(int address,const char* buffer,int length);
+	friend void DISP_test_namespace::delay();
 	static char mI2C_record_write_buffer[10];
 	static int mI2C_record_write_address;
 	static int mI2C_record_write_length;
+	static int mDelayCalled;
 };
 
 char unittest_DISP::mI2C_record_write_buffer[10]={0,0,0,0,0,0,0,0,0,0};
 int unittest_DISP::mI2C_record_write_address;
 int unittest_DISP::mI2C_record_write_length;
+int unittest_DISP::mDelayCalled;
 
 int DISP_test_namespace::I2C_write(int address,const char* buffer,int length)
 {
@@ -97,6 +107,11 @@ int DISP_test_namespace::I2C_write(int address,const char* buffer,int length)
 	unittest_DISP::mI2C_record_write_address = address;
 	unittest_DISP::mI2C_record_write_length = length;
 	return length;
+}
+
+void DISP_test_namespace::delay()
+{
+	unittest_DISP::mDelayCalled++;
 }
 
 /**********************************************************************
@@ -132,7 +147,7 @@ TEST_F( unittest_DISP, test_constructor )
 //
 TEST_F( unittest_DISP, display_empty_frame )
 {
-	mRc = DISP_test_namespace::DISP_show_frame( FRAME_EMPTY );
+	mRc = DISP_test_namespace::DISP_show_frame( FRAME_EMPTY,0 );
 	EXPECT_EQ( 10, mRc );
 
 	EXPECT_EQ( SEGMENT_NONE, get_i2c_buffer_char(1) );
@@ -144,7 +159,7 @@ TEST_F( unittest_DISP, display_empty_frame )
 
 TEST_F( unittest_DISP, display_all_frame )
 {
-	mRc = DISP_test_namespace::DISP_show_frame( FRAME_ALL );
+	mRc = DISP_test_namespace::DISP_show_frame( FRAME_ALL,0 );
 	EXPECT_EQ( 10, mRc );
 
 	EXPECT_EQ( SEGMENT_ALL, get_i2c_buffer_char(1) );
@@ -155,11 +170,11 @@ TEST_F( unittest_DISP, display_all_frame )
 
 TEST_F( unittest_DISP, colon_is_not_part_of_frame_data )
 {
-	mRc = DISP_test_namespace::DISP_show_frame( FRAME_ALL );
+	mRc = DISP_test_namespace::DISP_show_frame( FRAME_ALL,0 );
 	EXPECT_EQ( 10, mRc );
 	EXPECT_EQ( (char)0x00, get_i2c_buffer_char(5) );	//
 
-	mRc = DISP_test_namespace::DISP_show_frame( FRAME_EMPTY );
+	mRc = DISP_test_namespace::DISP_show_frame( FRAME_EMPTY,0 );
 	EXPECT_EQ( 10, mRc );
 	EXPECT_EQ( (char)0x00, get_i2c_buffer_char(5) );	//
 }

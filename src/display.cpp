@@ -6,6 +6,7 @@
  */
 
 #include "i2c.h"
+#include "delay.h"
 #include "display.h"
 
 const int addr = ADDR_HT16K33;
@@ -75,7 +76,8 @@ char frame [] = {0, 0, 1, 0, 2, 0, 3, 0, 4, 0};
 int mapping[] = {9, 7, 3, 1};
 
 // Format the data frame and write to the display
-int DISP_show_frame(uint32_t value) {
+int DISP_show_frame(uint32_t value,int framedelay)
+{
 	int rc;
 
 	for(int i = 0; i <= 3; i++) {
@@ -83,5 +85,19 @@ int DISP_show_frame(uint32_t value) {
 		value = value >> 8;
 	}
 	rc = I2C_write(addr, frame, 10);
+	if ( framedelay ){
+		delay();
+	}
 	return rc;
+}
+
+int DISP_show_anim( const uint32_t* frames, int length, int framedelay )
+{
+	if ( 0!=frames && length>0 ){
+		for(int i=0; i<length; i++){
+			DISP_show_frame( frames[i],framedelay );
+		}
+		return length;
+	}
+	return 0;
 }

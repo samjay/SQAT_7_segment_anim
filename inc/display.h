@@ -29,11 +29,22 @@
 #define FRAME_EMPTY 0x00000000
 #define FRAME_ALL   0xFFFFFFFF
 
-#define SEGMENT_ALL  0x00FF
-#define SEGMENT_NONE 0x0000
+#define SEGMENT_ALL  0xFF
+#define SEGMENT_NONE 0x00
+#define SEGMENT_DOT  0x80
+#define CSEGMENT_DOT (char)0x80
+
+#define ANIM_DOT_1 0x80000000
+#define ANIM_DOT_2 0x00800000
+#define ANIM_DOT_3 0x00008000
+#define ANIM_DOT_4 0x00000080
+
+#define FRAME_DELAY_ON  1
+#define FRAME_DELAY_OFF 0
 
 int DISP_off();
 int DISP_on();
-int DISP_show_frame(uint32_t position);
+int DISP_show_frame(uint32_t position,int delayon);
+int DISP_show_anim( const uint32_t* frames, int length, int framedelay );
 
 #endif /* DISPLAY_H_ */

@@ -1,5 +1,5 @@
 /*
- * led_test.cpp
+ * display_test_mocked.cpp
  *
  *  Created on: Apr 9, 2016
  *      Author: timppa
@@ -8,19 +8,17 @@
 
 #include "gtest_inc.h"
 
-//#include <LPC8xx.h>
-typedef unsigned char uint8_t;
-typedef unsigned int uint32_t;
+//typedef unsigned char uint8_t;
+//typedef unsigned int uint32_t;
 #include "display.h"
 #include "i2c.h"
 
-#define USE_MOCKS 1
-
-#if USE_MOCKS
 #include "Mock_I2C.h"
 #include "Mock_delay.h"
-#endif
 
+//
+// these are needed in EXPECTs using (non-elementary) mock specifications
+//
 using ::testing::InSequence;
 using ::testing::Return;
 using ::testing::SaveArg;
@@ -51,15 +49,18 @@ using ::testing::Test;
 //
 ACTION_P( SaveDispBuffer, store ) { memcpy(store,arg1,arg2); }
 
-static char mDispBuffer[10];
-
+/**********************************************************************
+ *
+ * GoogleTest test-class for 7-segment display testing with Mocks
+ *
+ **********************************************************************/
 class unittest_DISP2 : public Test
 {
 protected:
 	virtual void SetUp()
 	{
 		mRc = -1;
-		memset( mDispBuffer, 0x00, sizeof(mDispBuffer) );
+		memset( mI2C_record_write_buffer, 0x00, sizeof(mI2C_record_write_buffer) );
 		mMockI2C = new Mock_I2C();
 		mMockDelay = new Mock_Delay();
 	}
@@ -113,7 +114,11 @@ protected:
 	}
 protected:
 	int mRc;
-//public:
+	//
+	// default buffer for tracking data
+	//
+	char mI2C_record_write_buffer[10];
+
 	//
 	// this "friend" access lets the "DISP_test_namespace::I2C_write" code below
 	//   to access the variables used to record the parameters
@@ -177,14 +182,15 @@ TEST_F( unittest_DISP2, display_off )
 {
 	const int cmdLen = 1;
 	const char* data=0;
+
 	EXPECT_CALL(*mMockI2C,i2c_write(ADDR_HT16K33,_,cmdLen)).
 			WillOnce( DoAll(
 					SaveArg<1>( &data ),
-					SaveDispBuffer( mDispBuffer ),
+					SaveDispBuffer( mI2C_record_write_buffer ),
 					Return(cmdLen) ) );
 	mRc = DISP_test_namespace2::DISP_off();
 	EXPECT_EQ( cmdLen, mRc );
-	EXPECT_EQ( HT16K33_CMD_OSCILLATOR_OFF, mDispBuffer[0] );
+	EXPECT_EQ( HT16K33_CMD_OSCILLATOR_OFF, mI2C_record_write_buffer[0] );
 }
 
 //
@@ -203,7 +209,7 @@ TEST_F( unittest_DISP2, power_on_display )
 	// GoogleMock uses this:
 	InSequence callSequenceRecording;
 	//
-	// the "_" (underscore) is a wild char here, matching any
+	// the "_" (underscore) is a wild char here, matching any but the
 	//   - ADDR_HT16K133 must be matched
 	//   - cmdLen must be matched
 	//
@@ -236,8 +242,8 @@ TEST_F( unittest_DISP2, power_on_display )
  *
  */
 
-const int frameDataLength = 10;
-const char data_ShowAllSegments[frameDataLength]={
+const int kFrameDataLength = 10;
+const char data_ShowAllSegments[kFrameDataLength]={
 		0,(char)SEGMENT_ALL,
 		1,(char)SEGMENT_ALL,
 		2,0,
@@ -254,11 +260,11 @@ TEST_F( unittest_DISP2, show_single_frame )
 	//   - "data" contains pointer value (should be non zero)
 	//   - "mDispBuffer" contains the copy of the data
 	//
-	EXPECT_CALL(*mMockI2C,i2c_write(ADDR_HT16K33,_,frameDataLength)).
+	EXPECT_CALL(*mMockI2C,i2c_write(ADDR_HT16K33,_,kFrameDataLength)).
 			WillOnce( DoAll(
 					SaveArg<1>( &data ),
-					SaveDispBuffer( mDispBuffer ),
-					Return(frameDataLength) ) );
+					SaveDispBuffer( mI2C_record_write_buffer ),
+					Return(kFrameDataLength) ) );
 	//
 	// since framedelay is "1" we expect a call to delay too
 	//
@@ -269,13 +275,13 @@ TEST_F( unittest_DISP2, show_single_frame )
 	mRc = DISP_test_namespace2::DISP_show_frame( FRAME_ALL, FRAME_DELAY_ON );
 	//
 	// verify that data size is good
-	ASSERT_EQ( frameDataLength, mRc );
+	ASSERT_EQ( kFrameDataLength, mRc );
 	//
 	// verify the actual frame data: displayed segments
 	//   - mDispBuffer is where the mock saved it in EXPECT_CALL
 	bool equals = compare_display_data( data_ShowAllSegments,
-			frameDataLength,
-			mDispBuffer );
+			kFrameDataLength,
+			mI2C_record_write_buffer );
 	EXPECT_TRUE( equals );
 }
 
@@ -283,13 +289,13 @@ TEST_F( unittest_DISP2, show_single_frame )
 // correct data for 4 frame animation moving the dot
 //   from left to right
 //
-const char dot_anim_frame_1_data[frameDataLength]=
+const char dot_anim_frame_1_data[kFrameDataLength]=
 	{0,CSEGMENT_DOT,	1,0x00,				2,0,3,0x00,	4,0x00};
-const char dot_anim_frame_2_data[frameDataLength]=
+const char dot_anim_frame_2_data[kFrameDataLength]=
 	{0,0x00,		1,CSEGMENT_DOT,		2,0,3,0x00,	4,0x00};
-const char dot_anim_frame_3_data[frameDataLength]=
+const char dot_anim_frame_3_data[kFrameDataLength]=
 	{0,0x00,		1,0x00,		2,0,3,	CSEGMENT_DOT,4,0x00};
-const char dot_anim_frame_4_data[frameDataLength]=
+const char dot_anim_frame_4_data[kFrameDataLength]=
 	{0,0x00,		1,0x00,		2,0,3,	0x00,4,		CSEGMENT_DOT};
 
 //
@@ -300,40 +306,40 @@ TEST_F( unittest_DISP2, show_sequence_of_frames_with_delay )
 	uint32_t dot_anim[4] = {
 			ANIM_DOT_1,ANIM_DOT_2,ANIM_DOT_3,ANIM_DOT_4
 	};
-	char recordFrame1[frameDataLength];
-	char recordFrame2[frameDataLength];
-	char recordFrame3[frameDataLength];
-	char recordFrame4[frameDataLength];
+	char recordFrame1[kFrameDataLength];
+	char recordFrame2[kFrameDataLength];
+	char recordFrame3[kFrameDataLength];
+	char recordFrame4[kFrameDataLength];
 	const char* tempPointer=0;
 
 	InSequence callSequenceRecording;
 
-	EXPECT_CALL(*mMockI2C,i2c_write(ADDR_HT16K33,_,frameDataLength)).
+	EXPECT_CALL(*mMockI2C,i2c_write(ADDR_HT16K33,_,kFrameDataLength)).
 			WillOnce( DoAll(
 					SaveArg<1>( &tempPointer ),
 					SaveDispBuffer( recordFrame1 ),
-					Return(frameDataLength) ) );
+					Return(kFrameDataLength) ) );
 	EXPECT_CALL(*mMockDelay,delay());
 
-	EXPECT_CALL(*mMockI2C,i2c_write(ADDR_HT16K33,_,frameDataLength)).
+	EXPECT_CALL(*mMockI2C,i2c_write(ADDR_HT16K33,_,kFrameDataLength)).
 			WillOnce( DoAll(
 					SaveArg<1>( &tempPointer ),
 					SaveDispBuffer( recordFrame2 ),
-					Return(frameDataLength) ) );
+					Return(kFrameDataLength) ) );
 	EXPECT_CALL(*mMockDelay,delay());
 
-	EXPECT_CALL(*mMockI2C,i2c_write(ADDR_HT16K33,_,frameDataLength)).
+	EXPECT_CALL(*mMockI2C,i2c_write(ADDR_HT16K33,_,kFrameDataLength)).
 			WillOnce( DoAll(
 					SaveArg<1>( &tempPointer ),
 					SaveDispBuffer( recordFrame3 ),
-					Return(frameDataLength) ) );
+					Return(kFrameDataLength) ) );
 	EXPECT_CALL(*mMockDelay,delay());
 
-	EXPECT_CALL(*mMockI2C,i2c_write(ADDR_HT16K33,_,frameDataLength)).
+	EXPECT_CALL(*mMockI2C,i2c_write(ADDR_HT16K33,_,kFrameDataLength)).
 			WillOnce( DoAll(
 					SaveArg<1>( &tempPointer ),
 					SaveDispBuffer( recordFrame4 ),
-					Return(frameDataLength) ) );
+					Return(kFrameDataLength) ) );
 	EXPECT_CALL(*mMockDelay,delay());
 
 	mRc = DISP_test_namespace2::DISP_show_anim(dot_anim,4,FRAME_DELAY_ON );
@@ -345,19 +351,19 @@ TEST_F( unittest_DISP2, show_sequence_of_frames_with_delay )
 	// verify first frame
 	//
 	equals = compare_display_data( dot_anim_frame_1_data,
-			frameDataLength,
+			kFrameDataLength,
 			recordFrame1 );
 	EXPECT_TRUE( equals );
 	equals = compare_display_data( dot_anim_frame_2_data,
-			frameDataLength,
+			kFrameDataLength,
 			recordFrame2 );
 	EXPECT_TRUE( equals );
 	equals = compare_display_data( dot_anim_frame_3_data,
-			frameDataLength,
+			kFrameDataLength,
 			recordFrame3 );
 	EXPECT_TRUE( equals );
 	equals = compare_display_data( dot_anim_frame_4_data,
-			frameDataLength,
+			kFrameDataLength,
 			recordFrame4 );
 	EXPECT_TRUE( equals );
 }
@@ -371,36 +377,36 @@ TEST_F( unittest_DISP2, show_sequence_of_frames_with_delay )
 //
 TEST_F( unittest_DISP2, show_sequence_of_frames_with_delay_2 )
 {
+	// TODO: Oscar, maybe swap one or two of the ANIM_DOT_# below?
+	//       to turn test to RED
 	const uint32_t dot_anim[4] = {
-			ANIM_DOT_1,ANIM_DOT_2,ANIM_DOT_3,ANIM_DOT_3
+			ANIM_DOT_1,ANIM_DOT_2,ANIM_DOT_3,ANIM_DOT_4
 	};
-	char recordFrame1[frameDataLength];
-	char recordFrame2[frameDataLength];
-	char recordFrame3[frameDataLength];
-	char recordFrame4[frameDataLength];
+	char recordFrame1[kFrameDataLength];
+	char recordFrame2[kFrameDataLength];
+	char recordFrame3[kFrameDataLength];
+	char recordFrame4[kFrameDataLength];
 	const char* tempPointer=0;
 
 	InSequence callSequenceRecording;
 
-	add_expectation_with_delay( recordFrame1, tempPointer, frameDataLength );
-	add_expectation_with_delay( recordFrame2, tempPointer, frameDataLength );
-	add_expectation_with_delay( recordFrame3, tempPointer, frameDataLength );
-	add_expectation_with_delay( recordFrame4, tempPointer, frameDataLength );
+	add_expectation_with_delay( recordFrame1, tempPointer, kFrameDataLength );
+	add_expectation_with_delay( recordFrame2, tempPointer, kFrameDataLength );
+	add_expectation_with_delay( recordFrame3, tempPointer, kFrameDataLength );
+	add_expectation_with_delay( recordFrame4, tempPointer, kFrameDataLength );
 
 	mRc = DISP_test_namespace2::DISP_show_anim(dot_anim,4,FRAME_DELAY_ON );
 	EXPECT_EQ( 4, mRc );
-
-	bool equals=false;
 
 	//
 	// verify frames
 	//
 	verify_frame_equals( dot_anim_frame_1_data,
-			frameDataLength, recordFrame1 );
+			kFrameDataLength, recordFrame1 );
 	verify_frame_equals( dot_anim_frame_2_data,
-			frameDataLength, recordFrame2 );
+			kFrameDataLength, recordFrame2 );
 	verify_frame_equals( dot_anim_frame_3_data,
-			frameDataLength, recordFrame3 );
+			kFrameDataLength, recordFrame3 );
 	verify_frame_equals( dot_anim_frame_4_data,
-			frameDataLength, recordFrame4 );
+			kFrameDataLength, recordFrame4 );
 }

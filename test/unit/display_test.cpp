@@ -1,10 +1,9 @@
 /*
- * i2c_test.cpp
+ * display_test.cpp
  *
  *  Created on: Apr 9, 2016
  *      Author: timppa
  */
-
 
 #include "gtest_inc.h"
 
